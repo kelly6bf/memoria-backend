@@ -38,8 +38,8 @@ jobs:
 
       - name: Show extracted Labels
         run: |
-          echo "Labels are: ${{ steps.get_pr.outputs.labels }}"
+          printf "Labels are: %s\n" "${{ steps.get_pr.outputs.labels }}"
 
       - name: Show extracted Assignees
         run: |
-          echo "Assignees are: ${{ steps.get_pr.outputs.assignees }}"
+          printf "Assignees are: %s\n" "${{ steps.get_pr.outputs.assignees }}"
