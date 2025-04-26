@@ -1,0 +1,45 @@
+name: Extract PR Metadata
+
+on:
+  pull_request:
+    types: [closed]  # PR이 닫힐 때 (merge 포함)
+    branches:
+      - main         # main 브랜치에 머지될 때만
+
+jobs:
+  extract-pr-info:
+    if: github.event.pull_request.merged == true  # 머지된 PR만 대상
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print context
+        run: echo "Pull Request #${{ github.event.pull_request.number }} was merged."
+
+      - name: Get PR metadata
+        id: get_pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+
+            const labels = pr.data.labels.map(label => label.name);
+            const assignees = pr.data.assignees.map(user => user.login);
+
+            console.log("Labels:", labels);
+            console.log("Assignees:", assignees);
+
+            return {
+              labels: labels.join(', '),
+              assignees: assignees.join(', ')
+            };
+
+      - name: Show extracted Labels
+        run: |
+          echo "Labels are: ${{ steps.get_pr.outputs.labels }}"
+
+      - name: Show extracted Assignees
+        run: |
+          echo "Assignees are: ${{ steps.get_pr.outputs.assignees }}"
