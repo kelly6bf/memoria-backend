@@ -2,17 +2,17 @@ name: Extract PR Metadata
 
 on:
   pull_request:
-    types: [closed]  # PR이 닫힐 때 (merge 포함)
+    types: [opened, synchronize, reopened]  # PR 열리거나 업데이트될 때
     branches:
-      - main         # main 브랜치에 머지될 때만
+      - main         # main 브랜치 대상
 
 jobs:
   extract-pr-info:
-    if: github.event.pull_request.merged == true  # 머지된 PR만 대상
     runs-on: ubuntu-latest
     steps:
       - name: Print context
-        run: echo "Pull Request #${{ github.event.pull_request.number }} was merged."
+        run: |
+          echo "Pull Request #${{ github.event.pull_request.number }} is targeting main branch."
 
       - name: Get PR metadata
         id: get_pr
