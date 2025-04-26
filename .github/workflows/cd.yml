@@ -30,10 +30,8 @@ jobs:
             console.log("Labels:", labels);
             console.log("Assignees:", assignees);
 
-            return {
-              labels: labels.join(', '),
-              assignees: assignees.join(', ')
-            };
+            core.setOutput('labels', labels.join(', '));
+            core.setOutput('assignees', assignees.join(', '));
 
       - name: Show extracted Labels
         run: |
