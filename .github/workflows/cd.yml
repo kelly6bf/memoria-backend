@@ -40,3 +40,8 @@ jobs:
       - name: Show extracted Assignees
         run: |
           printf "Assignees are: %s\n" "${{ steps.get_pr.outputs.assignees }}"
+
+      - name: Print PR Info
+        run: |
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "PR URL: ${{ github.event.pull_request.html_url }}"
