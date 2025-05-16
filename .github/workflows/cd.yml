@@ -32,6 +32,7 @@ jobs:
             const shouldDeploy = hasDeployLabel && hasAssignees;
 
             core.setOutput("should_deploy", shouldDeploy ? "true" : "false");
+            core.setOutput("hasDeployLabel", hasDeployLabel);
             core.setOutput("assignees", assignees.join(', '));
             core.setOutput("has_assignees", hasAssignees ? "true" : "false");
 
