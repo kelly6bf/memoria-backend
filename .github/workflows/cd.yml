@@ -98,4 +98,4 @@ jobs:
           embed-title: "❌ BE 배포 실패 알림ㅜ (dev)"
           embed-description: |
             집에 보내줘... 🌛
-            Failure Reason : ${{ needs.check-deploy-decision.outputs.deploy_fail_message }}
+            실패 사유 : ${{ needs.check-deploy-decision.outputs.deploy_fail_message }}
