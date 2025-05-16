@@ -7,12 +7,11 @@ on:
       - main         # main 브랜치 대상
 
 jobs:
-  extract-pr-info:
+  deploy-check:
     runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
     steps:
-      - name: Print context
-        run: |
-          echo "Pull Request #${{ github.event.pull_request.number }} is targeting main branch."
       - name: Get PR metadata
         id: get_pr
         uses: actions/github-script@v7
@@ -25,30 +24,30 @@ jobs:
             });
 
             const labels = pr.data.labels.map(label => label.name);
-            const assignees = pr.data.assignees.map(user => user.login);
+            const hasDeployLabel = labels.includes("deploy");
 
-            console.log("Labels:", labels);
-            console.log("Assignees:", assignees);
+            core.setOutput("should_deploy", hasDeployLabel ? "true" : "false");
 
-            core.setOutput('labels', labels.join(', '));
-            core.setOutput('assignees', assignees.join(', '));
-
-      - name: Check deploy
+      - name: Check result
+        id: check
         run: |
-          if [[ "${{ steps.get_pr.outputs.labels }}" != *"deploy"* ]]; then
-            echo "No 'deploy' label found. Skipping deployment steps."
-            exit 0
-          fi
+          echo "should_deploy=${{ steps.get_pr.outputs.should_deploy }}"
+          echo "::set-output name=should_deploy::${{ steps.get_pr.outputs.should_deploy }}"
 
-      - name: Show extracted Labels
+  deploy:
+    needs: deploy-check
+    if: needs.deploy-check.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print context
         run: |
-          printf "Labels are: %s\n" "${{ steps.get_pr.outputs.labels }}"
-
-      - name: Show extracted Assignees
-        run: |
-          printf "Assignees are: %s\n" "${{ steps.get_pr.outputs.assignees }}"
+          echo "Pull Request #${{ github.event.pull_request.number }} is targeting main branch."
 
       - name: Print PR Info
         run: |
           echo "PR Number: ${{ github.event.pull_request.number }}"
           echo "PR URL: ${{ github.event.pull_request.html_url }}"
+
+      - name: Show deploy action
+        run: |
+          echo "🚀 Deploying because 'deploy' label was found."
