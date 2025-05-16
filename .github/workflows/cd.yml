@@ -53,7 +53,7 @@ jobs:
         id: deploy_result
         run: |
           echo "🚀 Deploying because 'deploy' label was found and assignee exists."
-          echo "deploy_result=fail" >> $GITHUB_OUTPUT
+          echo "deploy_result=success" >> $GITHUB_OUTPUT
 
   notify:
     runs-on: ubuntu-latest
@@ -72,6 +72,7 @@ jobs:
             
             - 작업자 : ${{ needs.check-deploy-decision.outputs.assignees }}
             - PR : ${{ github.event.pull_request.html_url }}
+            - Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       - name: Send deploy fail notification
         if: needs.deploy.outputs.deploy_result == 'fail'
         uses: tsickert/discord-webhook@v7.0.0
