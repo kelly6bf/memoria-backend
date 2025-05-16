@@ -10,7 +10,8 @@ jobs:
   deploy-check:
     runs-on: ubuntu-latest
     outputs:
-      should_deploy: ${{ steps.check.outputs.should_deploy }}
+      should_deploy: ${{ steps.get_pr.outputs.should_deploy }}
+      assignees: ${{ steps.get_pr.outputs.assignees }}
     steps:
       - name: Get PR metadata
         id: get_pr
@@ -24,15 +25,32 @@ jobs:
             });
 
             const labels = pr.data.labels.map(label => label.name);
+            const assignees = pr.data.assignees.map(user => user.login);
+
             const hasDeployLabel = labels.includes("deploy");
+            const hasAssignees = assignees.length > 0;
+            const shouldDeploy = hasDeployLabel && hasAssignees;
 
-            core.setOutput("should_deploy", hasDeployLabel ? "true" : "false");
+            core.setOutput("should_deploy", shouldDeploy ? "true" : "false");
+            core.setOutput("assignees", assignees.join(', '));
+            core.setOutput("has_deploy_label", hasDeployLabel ? "true" : "false");
+            core.setOutput("has_assignees", hasAssignees ? "true" : "false");
 
-      - name: Check result
-        id: check
+      - name: Explain deploy decision
         run: |
-          echo "should_deploy=${{ steps.get_pr.outputs.should_deploy }}"
-          echo "::set-output name=should_deploy::${{ steps.get_pr.outputs.should_deploy }}"
+          echo "🔍 Checking deploy conditions..."
+
+          if [[ "${{ steps.get_pr.outputs.should_deploy }}" == "true" ]]; then
+            echo "✅ Deployment conditions met: 'deploy' label present and assignees exist."
+          else
+            echo "❌ Deployment skipped due to the following reasons:"
+            if [[ "${{ steps.get_pr.outputs.has_deploy_label }}" != "true" ]]; then
+              echo " - Missing 'deploy' label."
+            fi
+            if [[ "${{ steps.get_pr.outputs.has_assignees }}" != "true" ]]; then
+              echo " - No assignees assigned to the PR."
+            fi
+          fi
 
   deploy:
     needs: deploy-check
@@ -48,6 +66,10 @@ jobs:
           echo "PR Number: ${{ github.event.pull_request.number }}"
           echo "PR URL: ${{ github.event.pull_request.html_url }}"
 
+      - name: Show PR Assignees
+        run: |
+          echo "Assignees: ${{ needs.deploy-check.outputs.assignees }}"
+
       - name: Show deploy action
         run: |
-          echo "🚀 Deploying because 'deploy' label was found."
+          echo "🚀 Deploying because 'deploy' label was found and assignee exists."
