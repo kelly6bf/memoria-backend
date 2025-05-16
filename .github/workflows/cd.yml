@@ -7,14 +7,14 @@ on:
       - main         # main 브랜치 대상
 
 jobs:
-  deploy-check:
+  check-deploy-conditions:
     runs-on: ubuntu-latest
     outputs:
-      should_deploy: ${{ steps.get_pr.outputs.should_deploy }}
-      assignees: ${{ steps.get_pr.outputs.assignees }}
+      should_deploy: ${{ steps.parse_deploy_conditions.outputs.should_deploy }}
+      assignees: ${{ steps.parse_deploy_conditions.outputs.assignees }}
     steps:
-      - name: Get PR metadata
-        id: get_pr
+      - name: Parse deploy conditions
+        id: parse_deploy_conditions
         uses: actions/github-script@v7
         with:
           script: |
@@ -36,21 +36,21 @@ jobs:
             core.setOutput("assignees", assignees.join(', '));
             core.setOutput("has_assignees", hasAssignees ? "true" : "false");
 
-      - name: Explain deploy decision
+      - name: Check deploy conditions
         run: |
           echo "🔍 Checking deploy conditions..."
 
-          if [[ "${{ steps.get_pr.outputs.should_deploy }}" == "true" ]]; then
+          if [[ "${{ steps.parse_deploy_conditions.outputs.should_deploy }}" == "true" ]]; then
             echo "🚚 deploy label이 존재하므로 배포 작업을 진행합니다."
-          elif [[ "${{ steps.get_pr.outputs.has_deploy_label }}" == "false" ]]; then
+          elif [[ "${{ steps.parse_deploy_conditions.outputs.has_deploy_label }}" == "false" ]]; then
             echo "✋ deploy label이 없으므로 배포 작업을 수행하지 않고 종료합니다."
           else
             echo "⛔️ 배포 PR에는 꼭 Assignees가 설정되어 있어야 합니다!"
           fi
 
   deploy:
-    needs: deploy-check
-    if: needs.deploy-check.outputs.should_deploy == 'true'
+    needs: check-deploy-conditions
+    if: needs.check-deploy-conditions.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Print context
