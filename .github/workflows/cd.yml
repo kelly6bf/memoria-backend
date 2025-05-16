@@ -87,17 +87,15 @@ jobs:
         uses: tsickert/discord-webhook@v7.0.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          embed-title: "🔥 BE 배포 결과 알림 : 🎉 성공! (테스트 알림입니다!)"
+          embed-title: "🎉 BE 배포 성공 알림! (dev)"
           embed-description: |
             오늘은 생맥 ㅎ 🍺
-            Environment : dev
       - name: Send deploy fail notification
         if: needs.check-deploy-decision.outputs.deploy_decision == 'INVALID_DEPLOY_CONDITIONS'
         uses: tsickert/discord-webhook@v7.0.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          embed-title: "🔥 BE 배포 결과 알림 : ❌ 실패ㅜ (테스트 알림입니다!)"
+          embed-title: "❌ BE 배포 실패 알림ㅜ (dev)"
           embed-description: |
             집에 보내줘... 🌛
-            Environment : dev
             Failure Reason : ${{ needs.check-deploy-decision.outputs.deploy_fail_message }}
