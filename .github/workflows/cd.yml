@@ -10,8 +10,7 @@ jobs:
   check-deploy-decision:
     runs-on: ubuntu-latest
     outputs:
-      deploy_decision: ${{ steps.check_deploy_decision.outputs.deploy_decision }}
-      deploy_fail_message: ${{ steps.check_deploy_decision.outputs.deploy_fail_message }}
+      should_deploy: ${{ steps.check_deploy_decision.outputs.should_deploy }}
       assignees: ${{ steps.check_deploy_decision.outputs.assignees }}
     steps:
       - name: Check deploy decision
@@ -25,54 +24,30 @@ jobs:
               pull_number: context.payload.pull_request.number
             });
             
-            const labels = pr.data.labels.map(label => label.name);
-            const assignees = pr.data.assignees.map(user => user.login);
-            const hasDeployLabel = labels.includes("deploy");
-            const hasAssignees = assignees.length > 0;
-            
-            let deployDecision = "";
-            let deployFailMessage = "";
-            if (!hasDeployLabel) {
-              deployDecision = "SKIP_DEPLOY";
-            } else if(!hasAssignees) {
-              deployDecision = "INVALID_DEPLOY_CONDITIONS";
-              deployFailMessage = "⛔️ 배포 PR에 Assignees가 설정되어 있지 않습니다.";
+            const hasDeployLabel = pr.data.labels.map(label => label.name).includes("deploy");
+            let assignees = pr.data.assignees.map(user => user.login);
+            if (assignees.length > 0) {
+              assignees = assignees.join(', ');
             } else {
-              deployDecision = "SHOULD_DEPLOY";
+              assignees = context.payload.pull_request.user.login;
             }
             
-            core.setOutput("deploy_decision", deployDecision);
-            core.setOutput("deploy_fail_message", deployFailMessage);
-            core.setOutput("assignees", assignees.join(', '));
+            core.setOutput("should_deploy", hasDeployLabel ? "true" : "false");
+            core.setOutput("assignees", assignees);
 
       - name: Explain deploy decision
         run: |
-          if [[ "${{ steps.check_deploy_decision.outputs.deploy_decision }}" == "SHOULD_DEPLOY" ]]; then
+          if [[ "${{ steps.check_deploy_decision.outputs.should_deploy }}" == "true" ]]; then
             echo "🚚 deploy label이 존재하므로 배포 작업을 진행합니다."
-          elif [[ "${{ steps.check_deploy_decision.outputs.deploy_decision }}" == "SKIP_DEPLOY" ]]; then
-            echo "✋ deploy label이 없으므로 배포 작업을 수행하지 않고 종료합니다."
           else
-            echo ${{ steps.check_deploy_decision.outputs.deploy_fail_message }}
+            echo "✋ deploy label이 없으므로 배포 작업을 수행하지 않고 종료합니다."
           fi
 
   deploy:
     needs: [ check-deploy-decision ]
-    if: needs.check-deploy-decision.outputs.deploy_decision == 'SHOULD_DEPLOY'
+    if: needs.check-deploy-decision.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Print context
-        run: |
-          echo "Pull Request #${{ github.event.pull_request.number }} is targeting main branch."
-
-      - name: Print PR Info
-        run: |
-          echo "PR Number: ${{ github.event.pull_request.number }}"
-          echo "PR URL: ${{ github.event.pull_request.html_url }}"
-
-      - name: Show PR Assignees
-        run: |
-          echo "Assignees: ${{ needs.deploy-check.outputs.assignees }}"
-
       - name: Show deploy action
         run: |
           echo "🚀 Deploying because 'deploy' label was found and assignee exists."
@@ -80,22 +55,15 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     needs: [ check-deploy-decision, deploy ]
-    if: needs.check-deploy-decision.outputs.deploy_decision != 'SKIP_DEPLOY'
+    if: needs.check-deploy-decision.outputs.should_deploy == 'true'
     steps:
       - name: Send deploy success notification
-        if: needs.check-deploy-decision.outputs.deploy_decision == 'SHOULD_DEPLOY'
         uses: tsickert/discord-webhook@v7.0.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           embed-title: "🎉 BE 배포 성공 알림! (dev)"
           embed-description: |
             오늘은 생맥 ㅎ 🍺
-      - name: Send deploy fail notification
-        if: needs.check-deploy-decision.outputs.deploy_decision == 'INVALID_DEPLOY_CONDITIONS'
-        uses: tsickert/discord-webhook@v7.0.0
-        with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          embed-title: "❌ BE 배포 실패 알림ㅜ (dev)"
-          embed-description: |
-            집에 보내줘... 🌛
-            실패 사유 : ${{ needs.check-deploy-decision.outputs.deploy_fail_message }}
+            
+            - 작업자 : ${{ needs.check-deploy-decision.outputs.assignees }}
+            - PR : ${{ github.event.pull_request.html_url }}"
