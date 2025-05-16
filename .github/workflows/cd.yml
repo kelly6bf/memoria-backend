@@ -84,3 +84,4 @@ jobs:
             
             - 작업자 : ${{ needs.check-deploy-decision.outputs.assignees }}
             - PR : ${{ github.event.pull_request.html_url }}
+            - Actions: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
