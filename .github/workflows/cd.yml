@@ -33,6 +33,13 @@ jobs:
             core.setOutput('labels', labels.join(', '));
             core.setOutput('assignees', assignees.join(', '));
 
+      - name: Check deploy
+        run: |
+          if [[ "${{ steps.get_pr.outputs.labels }}" != *"deploy"* ]]; then
+            echo "No 'deploy' label found. Skipping deployment steps."
+            exit 0
+          fi
+
       - name: Show extracted Labels
         run: |
           printf "Labels are: %s\n" "${{ steps.get_pr.outputs.labels }}"
