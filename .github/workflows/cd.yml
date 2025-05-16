@@ -32,7 +32,7 @@ jobs:
             const shouldDeploy = hasDeployLabel && hasAssignees;
 
             core.setOutput("should_deploy", shouldDeploy ? "true" : "false");
-            core.setOutput("hasDeployLabel", hasDeployLabel);
+            core.setOutput("has_deploy_label", hasDeployLabel);
             core.setOutput("assignees", assignees.join(', '));
             core.setOutput("has_assignees", hasAssignees ? "true" : "false");
 
@@ -42,10 +42,10 @@ jobs:
 
           if [[ "${{ steps.get_pr.outputs.should_deploy }}" == "true" ]]; then
             echo "🚚 deploy label이 존재하므로 배포 작업을 진행합니다."
-          elif [[ "${{ steps.get_pr.outputs.has_assignees }}" == "false" ]]; then
-            echo "⛔️배포 PR에는 꼭 Assignees가 설정되어 있어야 합니다!"
+          elif [[ "${{ steps.get_pr.outputs.has_deploy_label }}" == "false" ]]; then
+            echo "✋ deploy label이 없으므로 배포 작업을 수행하지 않고 종료합니다."
           else
-            echo "deploy label이 없으므로 배포 작업을 수행하지 않고 종료합니다."
+            echo "⛔️ 배포 PR에는 꼭 Assignees가 설정되어 있어야 합니다!"
           fi
 
   deploy:
