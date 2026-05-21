@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:33324/memoria
+    username: root
+    password: memoria
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+logging:
+  config: classpath:logback/logback-local.xml
+  level:
+    root: info
+    site.memoria: trace
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true

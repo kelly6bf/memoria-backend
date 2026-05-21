@@ -19,43 +19,93 @@ repositories {
     mavenCentral()
 }
 
+jar {
+    enabled = false
+}
+
 ext {
+    set('activeProfile', project.hasProperty('spring.profiles.active') ? project.property('spring.profiles.active') : 'default')
     set('snippetsDir', file("build/generated-snippets"))
+}
+
+configurations {
+    asciidoctorExt
 }
 
 dependencies {
     // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // Spring Actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // Spring Data JPA
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // Spring REST Docs
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-
     // Lombok
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
+    // Spring Actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     // MySQL
     runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'org.projectlombok:lombok'
+
+    // P6Spy
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.12.0'
+
+    // Spring REST Docs
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
 
     // JUnit
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
+tasks.register('restDocsTest', Test) {
+    description = "Run only REST Docs related tests"
+    group = "documentation"
+
     outputs.dir snippetsDir
+
     useJUnitPlatform()
+    filter {
+        includeTestsMatching "site.memoria.docs.*"
+    }
+
+    onlyIf {
+        ['local', 'dev'].contains(activeProfile)
+    }
 }
 
 tasks.named('asciidoctor') {
+    dependsOn restDocsTest
+
     inputs.dir snippetsDir
-    dependsOn test
+
+    sources {
+        include("**/index.adoc")
+    }
+
+    baseDirFollowsSourceFile()
+    configurations 'asciidoctorExt'
+
+    doLast {
+        copy {
+            from "${asciidoctor.outputDir}"
+            into "build/resources/main/static/docs"
+        }
+    }
+
+    onlyIf {
+        ['local', 'dev'].contains(activeProfile)
+    }
+}
+
+tasks.named('bootJar') {
+    dependsOn asciidoctor
 }

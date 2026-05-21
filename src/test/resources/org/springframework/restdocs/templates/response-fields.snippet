@@ -1,0 +1,15 @@
+===== Response Fields
+|===
+|Description|Field|Type|Nullable|Option
+
+{{#fields}}
+
+|{{#tableCellContent}}{{description}}{{/tableCellContent}}
+|{{#tableCellContent}}`+{{path}}+`{{/tableCellContent}}
+|{{#tableCellContent}}`+{{type}}+`{{/tableCellContent}}
+|{{#tableCellContent}}{{#optional}}O{{/optional}}{{^optional}}X{{/optional}}{{/tableCellContent}}
+|{{#tableCellContent}}{{#options}}{{.}}{{/options}}{{/tableCellContent}}
+
+{{/fields}}
+
+|===
