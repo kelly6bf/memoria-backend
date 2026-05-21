@@ -27,23 +27,26 @@ dependencies {
     // Spring Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // Spring Actuator
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // Spring Data JPA
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // Spring REST Docs
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-
     // Lombok
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
+    // Spring Actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Spring Data JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     // MySQL
     runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'org.projectlombok:lombok'
+
+    // Spring REST Docs
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
     // JUnit
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
