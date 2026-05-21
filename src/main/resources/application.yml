@@ -1,6 +1,18 @@
+server:
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
 spring:
   application:
     name: memoria-spring-boot-app
 
   profiles:
     active: local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+      base-path: /api/actuator
