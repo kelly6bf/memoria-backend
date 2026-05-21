@@ -1,3 +1,6 @@
 spring:
   application:
     name: memoria-spring-boot-app
+
+  profiles:
+    active: local
