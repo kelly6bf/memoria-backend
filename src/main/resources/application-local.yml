@@ -1,3 +1,10 @@
 spring:
-  application:
-    name: memoria-spring-boot-app
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:33324/memoria
+    username: root
+    password: memoria
+
+  jpa:
+    hibernate:
+      ddl-auto: update
